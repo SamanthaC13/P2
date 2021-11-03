@@ -6,8 +6,12 @@
 #include"scanner.h"
 #include"parser.h"
 int ignore;
+int startChar;
 int lineNum;
 FILE* input;
+int len=124;
+char* line;
+struct tokenType currentToken;
 void parser(char* filename)
 {
 	//file is opened for reading 
@@ -18,16 +22,95 @@ void parser(char* filename)
 		fprintf(stderr,"Error opening input file in TestScanner");
 		exit(1);
 	}
-	char* line=malloc(len*sizeof(char));
+	line=malloc(len*sizeof(char));
 	//read first line from file
 	line=fgets(line,len,input);
 	//send line to filter to filter out comments
 	line=filterLine(line);
-	int lineNum=1;
-	int startChar=0;
-	
+	lineNum=1;
+	startChar=0;
+	currentToken=scanner(line,lineNum,startChar);
+	filterToken(currentToken);
+	vars();
+	if(strcmp(currentToken.tokenInstance,"program")==0)
+	{
+		startChar+=currentToken.charCount;
+		currentToken=scanner(line,lineNum,startChar);
+		filterToken(currentToken);
+		block();
+	}
+	else
+	{
+		printf("PARSING ERROR LINE NUMBER:%d",lineNum);
+	}
 	//if it passes the parser send it to print the tree
 	
+}
+void vars()
+{
+	return;
+}
+void block()
+{
+	if(strcmp(currentToken.tokenInstance,"start")==0)
+	{
+		startChar+=currentToken.charCount;
+		currentToken=scanner(line,lineNum,startChar);
+		filterToken(currentToken);
+		vars();
+		stats();
+		if(strcmp(currentToken.tokenInstance,"stop")==0)
+		{
+			startChar+=currentToken.charCount;
+			currentToken=scanner(line,lineNum,startChar);
+			filterToken(currentToken);
+			return;
+		}
+	}	
+
+}
+void stats()
+{
+	stat();
+	mstat();
+	return;
+}
+void stat()
+{
+	int();
+	if(currentToken.tokenID=SMICLN)
+	{
+		startChar=startChar+currentToken.charCount;
+		currentToken=scanner(line,lineNum,startChar);
+		filterToken;
+		return;
+	}
+}
+void mstat()
+{
+	return;
+}
+void in()
+{
+
+
+}
+struct tokenType filterToken(struct tokenType token)
+{
+	if(token.tokenID<0)
+	{
+		printf("\nSCANNER ERROR: LINE NUMBER-%d",token.lineCount);
+		exit(0);
+	}
+	if(token.tokenID==WSTK)
+	{
+		token=scanner(line,lineNum,startChar+token.charCount);
+		filterToken(token);
+	}
+	if(token.tokenID==EOLTK)
+	{
+		line=getNewLine(line);
+	}
 }
 char* getNewLine(char* line)
 {
@@ -40,7 +123,6 @@ char* getNewLine(char* line)
 	}
 	else
 	{
-		//send line to filter to filter out comments
 		line=filterLine(line);
 		lineNum=lineNum++;
 		startChar=0;
