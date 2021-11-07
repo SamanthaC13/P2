@@ -1,7 +1,10 @@
 void parser(char*);
 char* filterLine(char*);
 char* getNewLine(char*);
-struct tokenType filterToken(struct tokenType);
+void filterToken(struct tokenType);
+void error(int,char*);
+void getNewToken();
+void program();
 void vars();
 void block();
 void stats();

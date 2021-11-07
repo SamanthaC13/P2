@@ -3,6 +3,7 @@
  * Class:CS4280*/
 #include<stdio.h>
 #include<stdlib.h>
+#include"token.h"
 #include"scanner.h"
 #include"parser.h"
 int ignore;
@@ -31,20 +32,29 @@ void parser(char* filename)
 	startChar=0;
 	currentToken=scanner(line,lineNum,startChar);
 	filterToken(currentToken);
-	vars();
-	if(strcmp(currentToken.tokenInstance,"program")==0)
+	program();
+	//if it passes the parser send it to print the tree
+	if(currentToken.tokenID=EOFTK)
 	{
-		startChar+=currentToken.charCount;
-		currentToken=scanner(line,lineNum,startChar);
-		filterToken(currentToken);
+		printf("\nParsed through successfully\n");
+	}
+	else
+	{
+		printf("\nParsed through but no EOF token\n");
+	}
+}
+void program()
+{
+	vars();
+ 	if(strcmp(currentToken.tokenInstance,"program")==0)
+ 	{
+		getNewToken();
 		block();
 	}
 	else
 	{
-		printf("PARSING ERROR LINE NUMBER:%d",lineNum);
+		error(0,"program");
 	}
-	//if it passes the parser send it to print the tree
-	
 }
 void vars()
 {
@@ -54,20 +64,23 @@ void block()
 {
 	if(strcmp(currentToken.tokenInstance,"start")==0)
 	{
-		startChar+=currentToken.charCount;
-		currentToken=scanner(line,lineNum,startChar);
-		filterToken(currentToken);
+		getNewToken();
 		vars();
 		stats();
 		if(strcmp(currentToken.tokenInstance,"stop")==0)
 		{
-			startChar+=currentToken.charCount;
-			currentToken=scanner(line,lineNum,startChar);
-			filterToken(currentToken);
+			getNewToken();
 			return;
 		}
-	}	
-
+		else
+		{	
+			error(2,"stop");
+		}
+	}
+	else
+	{
+		error(2,"start");
+	}
 }
 void stats()
 {
@@ -77,13 +90,15 @@ void stats()
 }
 void stat()
 {
-	int();
-	if(currentToken.tokenID=SMICLN)
+	in();
+	if(currentToken.tokenID==SMCLNTK)
 	{
-		startChar=startChar+currentToken.charCount;
-		currentToken=scanner(line,lineNum,startChar);
-		filterToken;
+		getNewToken();
 		return;
+	}
+	else
+	{
+		error(5,"Semi-Colon");
 	}
 }
 void mstat()
@@ -92,24 +107,51 @@ void mstat()
 }
 void in()
 {
-
-
+	if(strcmp(currentToken.tokenInstance,"listen")==0)
+	{
+		getNewToken();
+		if(currentToken.tokenID==IDTK)
+		{
+			getNewToken();
+			return;
+		}
+		else
+		{
+			error(6,"Identifier");
+		}
+	}
+	else
+	{
+		error(6,"listen");
+	}
 }
-struct tokenType filterToken(struct tokenType token)
+void error(int function,char* expected)
+{
+	char *functionNames[10]={"Program","vars","block","stats","mstats","stat","in"};
+	printf("\nPARSER ERROR:In Node %s expected to get %s and got %s at line Number:%d Character Count: %d\n",functionNames[function],expected,currentToken.tokenInstance,lineNum,startChar); 
+	exit(1);
+}
+void getNewToken()
+{
+	startChar+=currentToken.charCount;
+	currentToken=scanner(line,lineNum,startChar);
+	filterToken(currentToken);	
+}
+void filterToken(struct tokenType token)
 {
 	if(token.tokenID<0)
 	{
 		printf("\nSCANNER ERROR: LINE NUMBER-%d",token.lineCount);
 		exit(0);
 	}
-	if(token.tokenID==WSTK)
+	if(currentToken.tokenID==WSTK)
 	{
-		token=scanner(line,lineNum,startChar+token.charCount);
-		filterToken(token);
+		getNewToken();
 	}
 	if(token.tokenID==EOLTK)
 	{
 		line=getNewLine(line);
+		currentToken=scanner(line,lineNum,startChar);
 	}
 }
 char* getNewLine(char* line)
