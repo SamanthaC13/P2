@@ -58,7 +58,47 @@ void program()
 }
 void vars()
 {
-	return;
+	if(strcmp(currentToken.tokenInstance,"declare")==0)
+	{
+		getNewToken();
+		if(currentToken.tokenID==IDTK)
+		{
+			getNewToken();
+			if(currentToken.tokenID==EQTK)
+			{
+				getNewToken();
+				if(currentToken.tokenID==NUMTK)
+				{
+					getNewToken();
+					if(currentToken.tokenID==SMCLNTK)
+					{
+						getNewToken();
+						vars();
+					}
+					else
+					{
+						error(1,"Semi-Colon");
+					}	
+				}
+				else
+				{
+					error(1,"Number");
+				}
+			}
+			else
+			{
+				error(1,"Equal Sign");
+			}
+		}
+		else
+		{
+			error(1,"Identifier");
+		}
+	}
+	else
+	{
+		return;
+	}
 }
 void block()
 {
@@ -90,20 +130,80 @@ void stats()
 }
 void stat()
 {
-	in();
-	if(currentToken.tokenID==SMCLNTK)
+	if(strcmp(currentToken.tokenInstance,"listen")==0)
+	{	
+		in();
+		if(currentToken.tokenID==SMCLNTK)
+		{
+			getNewToken();
+			return;
+		}
+		else
+		{
+			error(5,"Semi-Colon");
+		}
+	}
+	else if(strcmp(currentToken.tokenInstance,"label")==0)
 	{
-		getNewToken();
+		label();
+		if(currentToken.tokenID==SMCLNTK)
+		{
+			getNewToken();
+			return;
+		}
+		else
+		{
+			error(5,"Semi-Colon");
+		}
+	}
+	else if(strcmp(currentToken.tokenInstance,"jump")==0)
+	{
+		goTo();
+		if(currentToken.tokenID==SMCLNTK)
+		{
+			getNewToken();
+			return;
+		}
+		else
+		{
+			error(5,"Semi-Colon");
+		}
+	}
+	else if(strcmp(currentToken.tokenInstance,"start")==0)
+	{
+		block();
 		return;
+	}
+	else if(strcmp(currentToken.tokenInstance,"talk")==0)
+	{
+		out();
+		if(currentToken.tokenID==SMCLNTK)
+		{
+			getNewToken();
+			return;
+		}
+		else
+		{
+			error(5,"Semi-Colon");
+		}
 	}
 	else
 	{
-		error(5,"Semi-Colon");
+		error(5,"Stat Option");
 	}
+	
 }
 void mstat()
 {
-	return;
+	if(strcmp(currentToken.tokenInstance,"listen")==0||strcmp(currentToken.tokenInstance,"label")==0||strcmp(currentToken.tokenInstance,"jump")==0||strcmp(currentToken.tokenInstance,"start")==0||strcmp(currentToken.tokenInstance,"talk")==0)
+	{
+		stat();
+	}
+	else
+	{
+		return;	
+	}
+	mstat();
 }
 void in()
 {
@@ -125,9 +225,111 @@ void in()
 		error(6,"listen");
 	}
 }
+void label()
+{
+	getNewToken();
+	if(currentToken.tokenID==IDTK)
+	{
+		getNewToken();
+		return;
+	}
+	else
+	{
+		error(7,"Identifier");
+	}
+}
+void goTo()
+{
+	getNewToken();
+	if(currentToken.tokenID==IDTK)
+	{
+		getNewToken();
+		return;
+	}
+	else
+	{
+		error(8,"Identifier");
+	}
+}
+void out()
+{
+	getNewToken();
+	expr();
+}
+void expr()
+{
+	N();
+	if(currentToken.tokenID==PSTK)
+	{
+		getNewToken();
+		expr();
+	}
+}
+void N()
+{
+	A();
+	if(currentToken.tokenID==SLTK)
+	{
+		getNewToken();
+		N();
+	}
+	if(currentToken.tokenID==ASKTK)
+	{
+		getNewToken();
+		N();
+	}
+}
+void A()
+{
+	M();
+	if(currentToken.tokenID==MINTK)
+	{
+		getNewToken();
+		A();
+	}
+}
+void M()
+{
+	if(currentToken.tokenID==PERTK)
+	{
+		getNewToken();
+		M();
+	}
+	else
+	{
+		R();
+	}
+}
+void R()
+{
+	if(currentToken.tokenID==LPTK)
+	{
+		getNewToken();
+		expr();
+		if(currentToken.tokenID==RPTK)
+		{
+			getNewToken();
+			return;
+		}
+		else
+		{
+			error(14,"Right Parentheses");
+		}
+	}
+	if(currentToken.tokenID==IDTK)
+	{
+		getNewToken();
+		return;
+	}
+	if(currentToken.tokenID==NUMTK)
+	{
+		getNewToken();
+		return;
+	}
+}
 void error(int function,char* expected)
 {
-	char *functionNames[10]={"Program","vars","block","stats","mstats","stat","in"};
+	char *functionNames[25]={"Program","vars","block","stats","mstats","stat","in","label","goTo","out","expr","N","A","M","R"};
 	printf("\nPARSER ERROR:In Node %s expected to get %s and got %s at line Number:%d Character Count: %d\n",functionNames[function],expected,currentToken.tokenInstance,lineNum,startChar); 
 	exit(1);
 }
@@ -137,21 +339,22 @@ void getNewToken()
 	currentToken=scanner(line,lineNum,startChar);
 	filterToken(currentToken);	
 }
-void filterToken(struct tokenType token)
+void filterToken()
 {
-	if(token.tokenID<0)
+	if(currentToken.tokenID<0)
 	{
-		printf("\nSCANNER ERROR: LINE NUMBER-%d",token.lineCount);
+		printf("\nSCANNER ERROR: LINE NUMBER-%d",currentToken.lineCount);
 		exit(0);
 	}
 	if(currentToken.tokenID==WSTK)
 	{
 		getNewToken();
 	}
-	if(token.tokenID==EOLTK)
+	if(currentToken.tokenID==EOLTK)
 	{
 		line=getNewLine(line);
 		currentToken=scanner(line,lineNum,startChar);
+		filterToken(currentToken);
 	}
 }
 char* getNewLine(char* line)
@@ -166,7 +369,7 @@ char* getNewLine(char* line)
 	else
 	{
 		line=filterLine(line);
-		lineNum=lineNum++;
+		lineNum=lineNum+1;
 		startChar=0;
 	}
 	return line;
