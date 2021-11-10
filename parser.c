@@ -403,6 +403,11 @@ void RO()
 		getNewToken();
 		return;
 	}
+	else if(currentToken.tokenID==PCTTK)
+	{
+		getNewToken();
+		return;
+	}
 	else if(currentToken.tokenID==LBCTK)
 	{
 		getNewToken();
