@@ -187,6 +187,45 @@ void stat()
 			error(5,"Semi-Colon");
 		}
 	}
+	else if(strcmp(currentToken.tokenInstance,"assign")==0)
+	{
+		assign();
+		if(currentToken.tokenID==SMCLNTK)
+		{
+			getNewToken();
+			return;
+		}
+		else
+		{
+			error(5,"Semi-Colon");
+		}
+	}
+	else if(strcmp(currentToken.tokenInstance,"while")==0)
+	{
+		loop();
+		if(currentToken.tokenID==SMCLNTK)
+		{	
+			getNewToken();
+			return;
+		}
+		else
+		{
+			error(5,"Semi-Colon");
+		}
+	}
+	else if(strcmp(currentToken.tokenInstance,"if")==0)
+	{
+		If();
+		if(currentToken.tokenID==SMCLNTK)
+		{
+			getNewToken();
+			return;
+		}
+		else
+		{
+			error(5,"Semi-Colon");
+		}
+	}
 	else
 	{
 		error(5,"Stat Option");
@@ -195,7 +234,7 @@ void stat()
 }
 void mstat()
 {
-	if(strcmp(currentToken.tokenInstance,"listen")==0||strcmp(currentToken.tokenInstance,"label")==0||strcmp(currentToken.tokenInstance,"jump")==0||strcmp(currentToken.tokenInstance,"start")==0||strcmp(currentToken.tokenInstance,"talk")==0)
+	if(strcmp(currentToken.tokenInstance,"listen")==0||strcmp(currentToken.tokenInstance,"label")==0||strcmp(currentToken.tokenInstance,"jump")==0||strcmp(currentToken.tokenInstance,"start")==0||strcmp(currentToken.tokenInstance,"talk")==0||strcmp(currentToken.tokenInstance,"while")==0||strcmp(currentToken.tokenInstance,"if")==0||strcmp(currentToken.tokenInstance,"assign")==0)
 	{
 		stat();
 	}
@@ -327,9 +366,141 @@ void R()
 		return;
 	}
 }
+void assign()
+{
+	getNewToken();
+	if(currentToken.tokenID=IDTK)
+	{
+		if(currentToken.tokenID==EQTK)
+		{
+			getNewToken();
+			expr();
+		}
+		else
+		{
+			error(15,"Eqaul Sign");
+		}
+	}
+	else
+	{
+		error(15,"Identiifier");
+	}
+}
+void RO()
+{
+	if(currentToken.tokenID==GTTK)
+	{
+		getNewToken();
+		return;
+	}
+	else if(currentToken.tokenID==LTTK)
+	{
+		getNewToken();
+		return;
+	}
+	else if(currentToken.tokenID==DBEQTK)
+	{
+		getNewToken();
+		return;
+	}
+	else if(currentToken.tokenID==LBCTK)
+	{
+		getNewToken();
+		if(currentToken.tokenID==DBEQTK)
+		{
+			getNewToken();
+			if(currentToken.tokenID==RBCTK)
+			{
+				getNewToken();
+				return;
+			}
+			else
+			{
+				error(16,"RightBrace");
+			}
+		}
+		else
+		{
+			error(16,"Double Equal");
+		}
+	}
+	else
+	{
+		error(16,"Relational Operators");
+	}	
+}
+void loop()
+{
+	getNewToken();
+	if(currentToken.tokenID==LBKTK)
+	{
+		getNewToken();
+		expr();
+		RO();
+		expr();
+		if(currentToken.tokenID=RBKTK)
+		{
+			getNewToken();
+			stat();
+			return;
+		}
+		else
+		{
+			error(17,"Right Bracket");
+		}
+			
+	}
+	else
+	{
+		error(17,"Left Bracket");
+	}
+
+}
+void If()
+{
+	getNewToken();
+	if(currentToken.tokenID==LBKTK)
+	{
+		getNewToken();
+		expr();
+		RO();
+		expr();
+		if(currentToken.tokenID=RBKTK)
+		{
+			getNewToken();
+			if(strcmp(currentToken.tokenInstance,"then")==0)
+			{
+				getNewToken();
+				stat();
+				if(strcmp(currentToken.tokenInstance,"else")==0)
+				{
+					getNewToken();
+					stat();
+					return;
+				}
+				else
+				{
+					return;
+				}
+			}
+			else
+			{
+				error(18,"then");
+			}
+		}
+		else
+		{
+			error(18,"Right Bracket");
+		}
+	}
+	else
+	{
+		error(18,"Left Bracket");
+	}
+}
 void error(int function,char* expected)
 {
-	char *functionNames[25]={"Program","vars","block","stats","mstats","stat","in","label","goTo","out","expr","N","A","M","R"};
+	char *functionNames[25]={"Program","vars","block","stats","mstats","stat","in","label","goTo","out","expr","N","A","M","R","assign","RO","loop","if"};
 	printf("\nPARSER ERROR:In Node %s expected to get %s and got %s at line Number:%d Character Count: %d\n",functionNames[function],expected,currentToken.tokenInstance,lineNum,startChar); 
 	exit(1);
 }

@@ -19,3 +19,7 @@ void N();
 void A();
 void M();
 void R();
+void RO();
+void assign();
+void loop();
+void If();
