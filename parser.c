@@ -369,8 +369,9 @@ void R()
 void assign()
 {
 	getNewToken();
-	if(currentToken.tokenID=IDTK)
+	if(currentToken.tokenID==IDTK)
 	{
+		getNewToken();
 		if(currentToken.tokenID==EQTK)
 		{
 			getNewToken();
@@ -470,7 +471,7 @@ void If()
 		expr();
 		RO();
 		expr();
-		if(currentToken.tokenID=RBKTK)
+		if(currentToken.tokenID==RBKTK)
 		{
 			getNewToken();
 			if(strcmp(currentToken.tokenInstance,"then")==0)
