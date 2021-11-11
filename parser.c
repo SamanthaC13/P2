@@ -32,7 +32,8 @@ void parser(char* filename)
 	startChar=0;
 	currentToken=scanner(line,lineNum,startChar);
 	filterToken(currentToken);
-	program();
+	struct node_t* root;
+	root=program();
 	//if it passes the parser send it to print the tree
 	if(currentToken.tokenID=EOFTK)
 	{
@@ -43,21 +44,42 @@ void parser(char* filename)
 		printf("\nParsed through but no EOF token\n");
 	}
 }
-void program()
+struct node_t* getNode(char* functionName)
 {
-	vars();
+	struct node_t p= malloc(sizeof(struct node_t));
+	p.nodeName=functionName;
+	return p;
+}
+void addTokenToNode(struct node_t p)
+{
+	int i=0;
+	while(p->tokenList[i]!=NULL)
+	{
+		i++;
+	}
+	p->tokenList[i]=malloc(sizeof(struct tokenType));
+	p->tokenList[i]->tokenID=currentToken->tokenID;
+	p->tokenList[i]->lineCount=currentToken->lineCount;
+	p->tokenList[i]->charCount=currentToken->charCount;
+	strcpy(p->tokenList[i]->tokenInstance,currentToken->tokenInstance);	
+}
+struct node_t* program()
+{
+	struct node_t* p=getNode("program");
+	p->children[0]=vars();
  	if(strcmp(currentToken.tokenInstance,"program")==0)
  	{
 		getNewToken();
-		block();
+		p->children[1]=block();
 	}
 	else
 	{
 		error(0,"program");
 	}
 }
-void vars()
+struct node_t* vars()
 {
+	struct node_t* p=getNode("vars");
 	if(strcmp(currentToken.tokenInstance,"declare")==0)
 	{
 		getNewToken();
