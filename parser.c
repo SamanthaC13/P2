@@ -3,6 +3,7 @@
  * Class:CS4280*/
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
 #include"token.h"
 #include"scanner.h"
 #include"parser.h"
@@ -46,22 +47,20 @@ void parser(char* filename)
 }
 struct node_t* getNode(char* functionName)
 {
-	struct node_t p= malloc(sizeof(struct node_t));
-	p.nodeName=functionName;
+	struct node_t* p= malloc(sizeof(struct node_t));
+	p->nodeName=malloc(sizeof(char)*20);
+	strcpy(p->nodeName,functionName);
 	return p;
 }
-void addTokenToNode(struct node_t p)
+void addTokenToNode(struct node_t* p)
 {
-	int i=0;
-	while(p->tokenList[i]!=NULL)
-	{
-		i++;
-	}
-	p->tokenList[i]=malloc(sizeof(struct tokenType));
-	p->tokenList[i]->tokenID=currentToken->tokenID;
-	p->tokenList[i]->lineCount=currentToken->lineCount;
-	p->tokenList[i]->charCount=currentToken->charCount;
-	strcpy(p->tokenList[i]->tokenInstance,currentToken->tokenInstance);	
+	int i=p->numOfTokens;
+/*	p->tokenList[i] = malloc(sizeof(struct tokenType));
+	p->tokenList[i]->tokenID=currentToken.tokenID;
+	p->tokenList[i]->lineCount=currentToken.lineCount;
+	p->tokenList[i]->charCount=currentToken.charCount;
+	strcpy(p->tokenList[i]->tokenInstance,currentToken.tokenInstance);*/
+	p->numOfTokens+=1;	
 }
 struct node_t* program()
 {
@@ -82,20 +81,25 @@ struct node_t* vars()
 	struct node_t* p=getNode("vars");
 	if(strcmp(currentToken.tokenInstance,"declare")==0)
 	{
+		addTokenToNode(p);
 		getNewToken();
 		if(currentToken.tokenID==IDTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
 			if(currentToken.tokenID==EQTK)
 			{
+				addTokenToNode(p);
 				getNewToken();
 				if(currentToken.tokenID==NUMTK)
 				{
+					addTokenToNode(p);
 					getNewToken();
 					if(currentToken.tokenID==SMCLNTK)
 					{
+						addTokenToNode(p);
 						getNewToken();
-						vars();
+						p->children[0]=vars();
 					}
 					else
 					{
@@ -119,20 +123,23 @@ struct node_t* vars()
 	}
 	else
 	{
-		return;
+		return NULL;
 	}
 }
-void block()
+struct node_t* block()
 {
+	struct node_t* p=getNode("block");
 	if(strcmp(currentToken.tokenInstance,"start")==0)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		vars();
-		stats();
+		p->children[0]=vars();
+		p->children[1]=stats();
 		if(strcmp(currentToken.tokenInstance,"stop")==0)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{	
@@ -144,21 +151,24 @@ void block()
 		error(2,"start");
 	}
 }
-void stats()
+struct node_t* stats()
 {
-	stat();
-	mstat();
-	return;
+	struct node_t* p=getNode("stats");
+	p->children[0]=stat();
+	p->children[1]=mstat();
+	return p;
 }
-void stat()
+struct node_t* stat()
 {
+	struct node_t* p=getNode("stat");
 	if(strcmp(currentToken.tokenInstance,"listen")==0)
 	{	
-		in();
+		p->children[0]=in();
 		if(currentToken.tokenID==SMCLNTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{
@@ -167,11 +177,12 @@ void stat()
 	}
 	else if(strcmp(currentToken.tokenInstance,"label")==0)
 	{
-		label();
+		p->children[0]=label();
 		if(currentToken.tokenID==SMCLNTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{
@@ -180,11 +191,12 @@ void stat()
 	}
 	else if(strcmp(currentToken.tokenInstance,"jump")==0)
 	{
-		goTo();
+		p->children[0]=goTo();
 		if(currentToken.tokenID==SMCLNTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{
@@ -193,16 +205,17 @@ void stat()
 	}
 	else if(strcmp(currentToken.tokenInstance,"start")==0)
 	{
-		block();
-		return;
+		p->children[0]=block();
+		return p;
 	}
 	else if(strcmp(currentToken.tokenInstance,"talk")==0)
 	{
-		out();
+		p->children[0]=out();
 		if(currentToken.tokenID==SMCLNTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{
@@ -211,11 +224,12 @@ void stat()
 	}
 	else if(strcmp(currentToken.tokenInstance,"assign")==0)
 	{
-		assign();
+		p->children[0]=assign();
 		if(currentToken.tokenID==SMCLNTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{
@@ -224,11 +238,12 @@ void stat()
 	}
 	else if(strcmp(currentToken.tokenInstance,"while")==0)
 	{
-		loop();
+		p->children[0]=loop();
 		if(currentToken.tokenID==SMCLNTK)
 		{	
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{
@@ -237,11 +252,12 @@ void stat()
 	}
 	else if(strcmp(currentToken.tokenInstance,"if")==0)
 	{
-		If();
+		p->children[0]=If();
 		if(currentToken.tokenID==SMCLNTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{
@@ -254,27 +270,31 @@ void stat()
 	}
 	
 }
-void mstat()
+struct node_t* mstat()
 {
+	struct node_t* p= getNode("mstat");	
 	if(strcmp(currentToken.tokenInstance,"listen")==0||strcmp(currentToken.tokenInstance,"label")==0||strcmp(currentToken.tokenInstance,"jump")==0||strcmp(currentToken.tokenInstance,"start")==0||strcmp(currentToken.tokenInstance,"talk")==0||strcmp(currentToken.tokenInstance,"while")==0||strcmp(currentToken.tokenInstance,"if")==0||strcmp(currentToken.tokenInstance,"assign")==0)
 	{
-		stat();
+		p->children[0]=stat();
 	}
 	else
 	{
-		return;	
+		return p;	
 	}
-	mstat();
+	p->children[1]=mstat();
 }
-void in()
+struct node_t* in()
 {
+	struct node_t* p=getNode("in");
 	if(strcmp(currentToken.tokenInstance,"listen")==0)
 	{
+		addTokenToNode(p);	
 		getNewToken();
 		if(currentToken.tokenID==IDTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{
@@ -286,91 +306,116 @@ void in()
 		error(6,"listen");
 	}
 }
-void label()
+struct node_t* label()
 {
+	struct node_t* p=getNode("label");
+	addTokenToNode(p);	
 	getNewToken();
 	if(currentToken.tokenID==IDTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		return;
+		return p;
 	}
 	else
 	{
 		error(7,"Identifier");
 	}
 }
-void goTo()
+struct node_t* goTo()
 {
+	struct node_t* p=getNode("goTo");
+	addTokenToNode(p);
 	getNewToken();
 	if(currentToken.tokenID==IDTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		return;
+		return p;
 	}
 	else
 	{
 		error(8,"Identifier");
 	}
 }
-void out()
+struct node_t* out()
 {
+	struct node_t* p=getNode("out");
+	addTokenToNode(p);
 	getNewToken();
-	expr();
+	p->children[0]=expr();
+	return p;
 }
-void expr()
+struct node_t* expr()
 {
-	N();
+	struct node_t* p=getNode("expr");
+	p->children[0]=N();
 	if(currentToken.tokenID==PSTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		expr();
+		p->children[1]=expr();
+		return p;
 	}
 }
-void N()
+struct node_t* N()
 {
-	A();
+	struct node_t*p=getNode("N");
+	p->children[0]=A();
 	if(currentToken.tokenID==SLTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		N();
+		p->children[1]=N();
+		return p;
 	}
-	if(currentToken.tokenID==ASKTK)
+	else if(currentToken.tokenID==ASKTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		N();
+		p->children[1]=N();
+		return p;
 	}
 }
-void A()
+struct node_t* A()
 {
-	M();
+	struct node_t* p=getNode("A");
+	p->children[0]=M();
 	if(currentToken.tokenID==MINTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		A();
+		p->children[1]=A();
+		return p;
 	}
 }
-void M()
+struct node_t* M()
 {
+	struct node_t* p=getNode("M");
 	if(currentToken.tokenID==PERTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		M();
+		p->children[0]=M();
 	}
 	else
 	{
-		R();
+		p->children[0]=R();
 	}
 }
-void R()
+struct node_t* R()
 {
+	struct node_t* p=getNode("R");
 	if(currentToken.tokenID==LPTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		expr();
+		p->children[0]=expr();
 		if(currentToken.tokenID==RPTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			return;
+			return p;
 		}
 		else
 		{
@@ -379,25 +424,32 @@ void R()
 	}
 	if(currentToken.tokenID==IDTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		return;
+		return p;
 	}
 	if(currentToken.tokenID==NUMTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		return;
+		return p;
 	}
 }
-void assign()
+struct node_t* assign()
 {
+	struct node_t* p=getNode("assign");
+	addTokenToNode(p);
 	getNewToken();
 	if(currentToken.tokenID==IDTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
 		if(currentToken.tokenID==EQTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			expr();
+			p->children[0]=expr();
+			return p;
 		}
 		else
 		{
@@ -409,38 +461,46 @@ void assign()
 		error(15,"Identiifier");
 	}
 }
-void RO()
+struct node_t* RO()
 {
+	struct node_t* p=getNode("RO");
 	if(currentToken.tokenID==GTTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		return;
+		return p;
 	}
 	else if(currentToken.tokenID==LTTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		return;
+		return p;
 	}
 	else if(currentToken.tokenID==DBEQTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		return;
+		return p;
 	}
 	else if(currentToken.tokenID==PCTTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		return;
+		return p;
 	}
 	else if(currentToken.tokenID==LBCTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
 		if(currentToken.tokenID==DBEQTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
 			if(currentToken.tokenID==RBCTK)
 			{
+				addTokenToNode(p);
 				getNewToken();
-				return;
+				return p;
 			}
 			else
 			{
@@ -457,20 +517,24 @@ void RO()
 		error(16,"Relational Operators");
 	}	
 }
-void loop()
+struct node_t* loop()
 {
+	struct node_t* p=getNode("loop");
+	addTokenToNode(p);
 	getNewToken();
 	if(currentToken.tokenID==LBKTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		expr();
-		RO();
-		expr();
+		p->children[0]=expr();
+		p->children[1]=RO();
+		p->children[2]=expr();
 		if(currentToken.tokenID=RBKTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
-			stat();
-			return;
+			p->children[3]=stat();
+			return p;
 		}
 		else
 		{
@@ -484,31 +548,37 @@ void loop()
 	}
 
 }
-void If()
+struct node_t* If()
 {
+	struct node_t* p=getNode("If");
+	addTokenToNode(p);
 	getNewToken();
 	if(currentToken.tokenID==LBKTK)
 	{
+		addTokenToNode(p);
 		getNewToken();
-		expr();
-		RO();
-		expr();
+		p->children[0]=expr();
+		p->children[1]=RO();
+		p->children[2]=expr();
 		if(currentToken.tokenID==RBKTK)
 		{
+			addTokenToNode(p);
 			getNewToken();
 			if(strcmp(currentToken.tokenInstance,"then")==0)
 			{
+				addTokenToNode(p);
 				getNewToken();
-				stat();
+				p->children[3]=stat();
 				if(strcmp(currentToken.tokenInstance,"else")==0)
 				{
+					addTokenToNode(p);
 					getNewToken();
-					stat();
-					return;
+					p->children[4]=stat();
+					return p;
 				}
 				else
 				{
-					return;
+					return p;
 				}
 			}
 			else
