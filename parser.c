@@ -39,7 +39,7 @@ void parser(char* filename)
 	if(currentToken.tokenID=EOFTK)
 	{
 		printf("\nParsed through successfully\n");
-		printTree(root);
+		printTree(root,0);
 	}
 	else
 	{
@@ -47,15 +47,15 @@ void parser(char* filename)
 	}
 	printf("\n");
 }
-void  printTree(struct node_t* p)
+void  printTree(struct node_t* p, int level)
 {
 	int i;
-	printf("\n%s-%d",p->nodeName,p->numOfTokens);
+	printf("\n%*c%d:%s-%d",level*2,' ',level,p->nodeName,p->numOfTokens);
 	for(i=0;i<5;i++)
 	{
 		if(p->children[i]!=NULL)
 		{
-			printTree(p->children[i]);
+			printTree(p->children[i],level+1);
 		}
 	}
 	return;
@@ -374,6 +374,7 @@ struct node_t* expr()
 		p->children[1]=expr();
 		return p;
 	}
+	return p;
 }
 struct node_t* N()
 {
@@ -393,6 +394,7 @@ struct node_t* N()
 		p->children[1]=N();
 		return p;
 	}
+	return p;
 }
 struct node_t* A()
 {
@@ -405,6 +407,7 @@ struct node_t* A()
 		p->children[1]=A();
 		return p;
 	}
+	return p;
 }
 struct node_t* M()
 {
@@ -414,12 +417,12 @@ struct node_t* M()
 		addTokenToNode(p);
 		getNewToken();
 		p->children[0]=M();
-		return p;
 	}
 	else
 	{
 		p->children[0]=R();
 	}
+	return p;
 }
 struct node_t* R()
 {
