@@ -10,6 +10,7 @@ char* getNewLine(char*);
 void filterToken();
 void error(int,char*);
 void getNewToken();
+void printTree(struct node_t*);
 struct node_t* getNode();
 void addTokenToNode(struct node_t*);
 struct node_t* program();

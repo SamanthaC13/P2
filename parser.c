@@ -39,11 +39,26 @@ void parser(char* filename)
 	if(currentToken.tokenID=EOFTK)
 	{
 		printf("\nParsed through successfully\n");
+		printTree(root);
 	}
 	else
 	{
 		printf("\nParsed through but no EOF token\n");
 	}
+	printf("\n");
+}
+void  printTree(struct node_t* p)
+{
+	int i;
+	printf("\n%s-%d",p->nodeName,p->numOfTokens);
+	for(i=0;i<5;i++)
+	{
+		if(p->children[i]!=NULL)
+		{
+			printTree(p->children[i]);
+		}
+	}
+	return;
 }
 struct node_t* getNode(char* functionName)
 {
@@ -70,6 +85,7 @@ struct node_t* program()
  	{
 		getNewToken();
 		p->children[1]=block();
+		return p;
 	}
 	else
 	{
@@ -78,9 +94,9 @@ struct node_t* program()
 }
 struct node_t* vars()
 {
-	struct node_t* p=getNode("vars");
 	if(strcmp(currentToken.tokenInstance,"declare")==0)
 	{
+		struct node_t* p=getNode("vars");
 		addTokenToNode(p);
 		getNewToken();
 		if(currentToken.tokenID==IDTK)
@@ -100,6 +116,7 @@ struct node_t* vars()
 						addTokenToNode(p);
 						getNewToken();
 						p->children[0]=vars();
+						return p;
 					}
 					else
 					{
@@ -128,9 +145,9 @@ struct node_t* vars()
 }
 struct node_t* block()
 {
-	struct node_t* p=getNode("block");
 	if(strcmp(currentToken.tokenInstance,"start")==0)
 	{
+		struct node_t* p=getNode("block");
 		addTokenToNode(p);
 		getNewToken();
 		p->children[0]=vars();
@@ -268,20 +285,20 @@ struct node_t* stat()
 	{
 		error(5,"Stat Option");
 	}
-	
 }
 struct node_t* mstat()
-{
-	struct node_t* p= getNode("mstat");	
+{	
 	if(strcmp(currentToken.tokenInstance,"listen")==0||strcmp(currentToken.tokenInstance,"label")==0||strcmp(currentToken.tokenInstance,"jump")==0||strcmp(currentToken.tokenInstance,"start")==0||strcmp(currentToken.tokenInstance,"talk")==0||strcmp(currentToken.tokenInstance,"while")==0||strcmp(currentToken.tokenInstance,"if")==0||strcmp(currentToken.tokenInstance,"assign")==0)
 	{
+		struct node_t* p=getNode("mstat");
 		p->children[0]=stat();
+		p->children[1]=mstat();
+		return p;
 	}
 	else
 	{
-		return p;	
+		return NULL;	
 	}
-	p->children[1]=mstat();
 }
 struct node_t* in()
 {
@@ -397,6 +414,7 @@ struct node_t* M()
 		addTokenToNode(p);
 		getNewToken();
 		p->children[0]=M();
+		return p;
 	}
 	else
 	{
