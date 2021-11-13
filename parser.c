@@ -50,7 +50,18 @@ void parser(char* filename)
 void  printTree(struct node_t* p, int level)
 {
 	int i;
-	printf("\n%*c%d:%s-%d",level*2,' ',level,p->nodeName,p->numOfTokens);
+	printf("\n%*c%d:%s-",level*2,' ',level,p->nodeName);
+	if(p->startToken!=NULL)
+	{
+		int j=0;
+		struct tokenType* tokenP=p->startToken;
+		while(j<p->numOfTokens)
+		{
+			printf(" %s",tokenP->tokenInstance);
+			tokenP=tokenP->nextToken;
+			j++;
+		}
+	}
 	for(i=0;i<5;i++)
 	{
 		if(p->children[i]!=NULL)
@@ -70,11 +81,32 @@ struct node_t* getNode(char* functionName)
 void addTokenToNode(struct node_t* p)
 {
 	int i=p->numOfTokens;
-/*	p->tokenList[i] = malloc(sizeof(struct tokenType));
-	p->tokenList[i]->tokenID=currentToken.tokenID;
-	p->tokenList[i]->lineCount=currentToken.lineCount;
-	p->tokenList[i]->charCount=currentToken.charCount;
-	strcpy(p->tokenList[i]->tokenInstance,currentToken.tokenInstance);*/
+	if(i==0)
+	{
+		p->startToken = malloc(sizeof(struct tokenType));
+		p->startToken->tokenID=currentToken.tokenID;
+		p->startToken->lineCount=currentToken.lineCount;
+		p->startToken->charCount=currentToken.charCount;
+		p->startToken->tokenInstance=malloc(sizeof(char)*15);
+		strcpy(p->startToken->tokenInstance,currentToken.tokenInstance);
+		p->startToken->nextToken=NULL;
+	}
+	else
+	{
+		int j=1;
+		struct tokenType* tokenP=p->startToken;
+		while(j<p->numOfTokens)
+		{
+			tokenP=tokenP->nextToken;
+			j++;
+		}
+		tokenP->nextToken=malloc(sizeof(struct tokenType));
+		tokenP->nextToken->tokenID=currentToken.tokenID;
+		tokenP->nextToken->lineCount=currentToken.lineCount;
+		tokenP->nextToken->charCount=currentToken.charCount;
+		tokenP->nextToken->tokenInstance=malloc(sizeof(char)*15);
+		strcpy(tokenP->nextToken->tokenInstance,currentToken.tokenInstance);
+	}
 	p->numOfTokens+=1;	
 }
 struct node_t* program()

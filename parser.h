@@ -1,6 +1,6 @@
 struct node_t{
 	char* nodeName;
-	struct tokenType** tokenList;
+	struct tokenType* startToken;
 	int numOfTokens;
 	struct node_t* children[5]; 
 };
