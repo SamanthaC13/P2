@@ -15,6 +15,8 @@ int len=124;
 char* line;
 struct tokenType currentToken;
 void parser(char* filename)
+//function that starts off the parser and collects the root when the parser is done and prints the tree 
+//after the parsing is complete
 {
 	//file is opened for reading 
 	input=fopen(filename,"r");
@@ -34,10 +36,11 @@ void parser(char* filename)
 	currentToken=scanner(line,lineNum,startChar);
 	filterToken(currentToken);
 	struct node_t* root;
+	//starts the process of parsing the program
 	root=program();
-	//if it passes the parser send it to print the tree
 	if(currentToken.tokenID=EOFTK)
 	{
+		//If the EOF token is gotton succesfully then the tree is printed
 		printf("\nParsed through successfully\n");
 		printTree(root,0);
 	}
@@ -48,10 +51,12 @@ void parser(char* filename)
 	printf("\n");
 }
 void  printTree(struct node_t* p, int level)
+//Function that prints the tree using recursion in a pre-order traversal
 {
 	int i;
 	printf("\n%*c%d:%s-",level*2,' ',level,p->nodeName);
 	if(p->startToken!=NULL)
+	//In each node all the tokens in that node are printed also
 	{
 		int j=0;
 		struct tokenType* tokenP=p->startToken;
@@ -66,12 +71,14 @@ void  printTree(struct node_t* p, int level)
 	{
 		if(p->children[i]!=NULL)
 		{
+			//the function recursivly calls itself with the children of the node
 			printTree(p->children[i],level+1);
 		}
 	}
 	return;
 }
 struct node_t* getNode(char* functionName)
+//makes the node of the tree and is named with the parameter passed
 {
 	struct node_t* p= malloc(sizeof(struct node_t));
 	p->nodeName=malloc(sizeof(char)*20);
@@ -79,9 +86,11 @@ struct node_t* getNode(char* functionName)
 	return p;
 }
 void addTokenToNode(struct node_t* p)
+//add the currentToken global variable to the node passed to the funnction
 {
 	int i=p->numOfTokens;
 	if(i==0)
+	//if the node has no other tokens yet then the token pointer is added to the node on start Pointer
 	{
 		p->startToken = malloc(sizeof(struct tokenType));
 		p->startToken->tokenID=currentToken.tokenID;
@@ -92,6 +101,7 @@ void addTokenToNode(struct node_t* p)
 		p->startToken->nextToken=NULL;
 	}
 	else
+	//if the node has more then one token already then the token is added to the last token in the list as  token's nextToken attribute
 	{
 		int j=1;
 		struct tokenType* tokenP=p->startToken;
@@ -110,6 +120,7 @@ void addTokenToNode(struct node_t* p)
 	p->numOfTokens+=1;	
 }
 struct node_t* program()
+//function for the program production rule
 {
 	struct node_t* p=getNode("program");
 	p->children[0]=vars();
@@ -125,6 +136,7 @@ struct node_t* program()
 	}
 }
 struct node_t* vars()
+//function for the vars production rule
 {
 	if(strcmp(currentToken.tokenInstance,"declare")==0)
 	{
@@ -176,6 +188,7 @@ struct node_t* vars()
 	}
 }
 struct node_t* block()
+//function for the block production rule
 {
 	if(strcmp(currentToken.tokenInstance,"start")==0)
 	{
@@ -201,6 +214,7 @@ struct node_t* block()
 	}
 }
 struct node_t* stats()
+//function for the stats production rule
 {
 	struct node_t* p=getNode("stats");
 	p->children[0]=stat();
@@ -208,6 +222,7 @@ struct node_t* stats()
 	return p;
 }
 struct node_t* stat()
+//function for the stat production rule
 {
 	struct node_t* p=getNode("stat");
 	if(strcmp(currentToken.tokenInstance,"listen")==0)
@@ -319,9 +334,11 @@ struct node_t* stat()
 	}
 }
 struct node_t* mstat()
+//function for the mstat production rule
 {	
 	if(strcmp(currentToken.tokenInstance,"listen")==0||strcmp(currentToken.tokenInstance,"label")==0||strcmp(currentToken.tokenInstance,"jump")==0||strcmp(currentToken.tokenInstance,"start")==0||strcmp(currentToken.tokenInstance,"talk")==0||strcmp(currentToken.tokenInstance,"while")==0||strcmp(currentToken.tokenInstance,"if")==0||strcmp(currentToken.tokenInstance,"assign")==0)
 	{
+		//Only go here if FIRST(stat) is true
 		struct node_t* p=getNode("mstat");
 		p->children[0]=stat();
 		p->children[1]=mstat();
@@ -333,6 +350,7 @@ struct node_t* mstat()
 	}
 }
 struct node_t* in()
+//function for the in production rule
 {
 	struct node_t* p=getNode("in");
 	if(strcmp(currentToken.tokenInstance,"listen")==0)
@@ -356,6 +374,7 @@ struct node_t* in()
 	}
 }
 struct node_t* label()
+//function for the label production rule
 {
 	struct node_t* p=getNode("label");
 	addTokenToNode(p);	
@@ -372,6 +391,7 @@ struct node_t* label()
 	}
 }
 struct node_t* goTo()
+//function for the goTo production rule
 {
 	struct node_t* p=getNode("goTo");
 	addTokenToNode(p);
@@ -388,6 +408,7 @@ struct node_t* goTo()
 	}
 }
 struct node_t* out()
+//function for the out production rule
 {
 	struct node_t* p=getNode("out");
 	addTokenToNode(p);
@@ -396,6 +417,7 @@ struct node_t* out()
 	return p;
 }
 struct node_t* expr()
+//function for the expr production rule
 {
 	struct node_t* p=getNode("expr");
 	p->children[0]=N();
@@ -409,6 +431,7 @@ struct node_t* expr()
 	return p;
 }
 struct node_t* N()
+//function for the N production rule
 {
 	struct node_t*p=getNode("N");
 	p->children[0]=A();
@@ -429,6 +452,7 @@ struct node_t* N()
 	return p;
 }
 struct node_t* A()
+//function for the A production rule
 {
 	struct node_t* p=getNode("A");
 	p->children[0]=M();
@@ -442,6 +466,7 @@ struct node_t* A()
 	return p;
 }
 struct node_t* M()
+//function for the M production rule
 {
 	struct node_t* p=getNode("M");
 	if(currentToken.tokenID==PERTK)
@@ -457,6 +482,7 @@ struct node_t* M()
 	return p;
 }
 struct node_t* R()
+//function for the R production rule
 {
 	struct node_t* p=getNode("R");
 	if(currentToken.tokenID==LPTK)
@@ -489,6 +515,7 @@ struct node_t* R()
 	}
 }
 struct node_t* assign()
+//function for the assign production rule
 {
 	struct node_t* p=getNode("assign");
 	addTokenToNode(p);
@@ -515,27 +542,32 @@ struct node_t* assign()
 	}
 }
 struct node_t* RO()
+//function for the Relationship operators production rule
 {
 	struct node_t* p=getNode("RO");
 	if(currentToken.tokenID==GTTK)
+	//Greater than symbol
 	{
 		addTokenToNode(p);
 		getNewToken();
 		return p;
 	}
 	else if(currentToken.tokenID==LTTK)
+	//Less than symbol
 	{
 		addTokenToNode(p);
 		getNewToken();
 		return p;
 	}
 	else if(currentToken.tokenID==DBEQTK)
+	//Double Equal symbol
 	{
 		addTokenToNode(p);
 		getNewToken();
 		return p;
 	}
 	else if(currentToken.tokenID==PCTTK)
+	//percent symbol
 	{
 		addTokenToNode(p);
 		getNewToken();
@@ -550,6 +582,7 @@ struct node_t* RO()
 			addTokenToNode(p);
 			getNewToken();
 			if(currentToken.tokenID==RBCTK)
+			//left brace-double equal-right brace 
 			{
 				addTokenToNode(p);
 				getNewToken();
@@ -571,6 +604,7 @@ struct node_t* RO()
 	}	
 }
 struct node_t* loop()
+//function for loop(while) production rule
 {
 	struct node_t* p=getNode("loop");
 	addTokenToNode(p);
@@ -602,6 +636,7 @@ struct node_t* loop()
 
 }
 struct node_t* If()
+//function for te If production rule
 {
 	struct node_t* p=getNode("If");
 	addTokenToNode(p);
@@ -650,18 +685,22 @@ struct node_t* If()
 	}
 }
 void error(int function,char* expected)
+//function takes the function the error was in and what was expected and prints out an error message
 {
 	char *functionNames[25]={"Program","vars","block","stats","mstats","stat","in","label","goTo","out","expr","N","A","M","R","assign","RO","loop","if"};
 	printf("\nPARSER ERROR:In Node %s expected to get %s and got %s at line Number:%d Character Count: %d\n",functionNames[function],expected,currentToken.tokenInstance,lineNum,startChar); 
 	exit(1);
 }
 void getNewToken()
+//Function gets a new Token from the scanner and filters it
 {
 	startChar+=currentToken.charCount;
 	currentToken=scanner(line,lineNum,startChar);
 	filterToken(currentToken);	
 }
 void filterToken()
+//function that checks the token recieved from the scanner and skips it if it is a white space, 
+//goes to a new line if it is a end-of-line token, and prints a scanner error 
 {
 	if(currentToken.tokenID<0)
 	{
@@ -680,6 +719,7 @@ void filterToken()
 	}
 }
 char* getNewLine(char* line)
+//gets a new line from the file to get more tokens and to see when the file is ended gets the EOF token
 {
 	char* lastLine=line;
 	line=fgets(line,len,input);
